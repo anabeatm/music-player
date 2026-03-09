@@ -90,8 +90,29 @@ class SongPage extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(formatTime(value.currentDuration)),
-                            Icon(Icons.shuffle),
-                            Icon(Icons.repeat),
+                            GestureDetector( // invisible widget in Dart that detects user interactions such as touches
+                              onTap: value.toggleShuffle,
+                              child: Icon(
+                                Icons.shuffle,
+                                color: value.isShuffleMode // if the corresponding variable is true then the icon turns green
+                                //else it uses the default color of the current theme
+                                    ? Colors.green
+                                    : Theme.of(
+                                        context,
+                                      ).colorScheme.inversePrimary,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: value.toggleRepeat,
+                              child: Icon(
+                                Icons.repeat,
+                                color: value.isRepeatMode
+                                    ? Colors.green
+                                    : Theme.of(
+                                        context,
+                                      ).colorScheme.inversePrimary,
+                              ),
+                            ),
                             Text(formatTime(value.totalDuration)),
                           ],
                         ),

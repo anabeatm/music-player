@@ -1,6 +1,7 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:minimal_music_player/models/song.dart';
+import 'dart:math';
 
 class PlaylistProvider extends ChangeNotifier {
   final List<Song> _playlist = [
@@ -49,6 +50,10 @@ class PlaylistProvider extends ChangeNotifier {
 
   bool _isPlaying = false;
 
+  // adding shuffle and repeat
+  bool _isShuffleMode = false;
+  bool _isRepeatMode = false;
+
   // play the song
 
   void play() async {
@@ -86,6 +91,21 @@ class PlaylistProvider extends ChangeNotifier {
 
     notifyListeners();
   }
+
+  // shuffle
+
+  void toggleShuffle() {
+    _isShuffleMode = !_isShuffleMode;
+    notifyListeners();
+  }
+
+  // repeat
+
+  void toggleRepeat() {
+    _isRepeatMode = !_isRepeatMode;
+    notifyListeners();
+  }
+
   // seek to a position
 
   void seek(Duration position) async {
@@ -96,10 +116,21 @@ class PlaylistProvider extends ChangeNotifier {
 
   void playNextSong() {
     if (_currentSongIndex != null) {
-      if (_currentSongIndex! < _playlist.length - 1) {
-        currentSongIndex = _currentSongIndex! + 1;
+      if (_isShuffleMode) {
+        int randomIndex = Random().nextInt(_playlist.length);
+
+        // while the index is equal current song index and the playlist length is more than one
+        while (randomIndex == _currentSongIndex && _playlist.length > 1) {
+          // random index receives other value from the playlist
+          randomIndex = Random().nextInt(_playlist.length);
+        }
+        currentSongIndex = randomIndex;
       } else {
-        currentSongIndex = 0;
+        if (_currentSongIndex! < _playlist.length - 1) {
+          currentSongIndex = _currentSongIndex! + 1;
+        } else {
+          currentSongIndex = 0;
+        }
       }
     }
   }
@@ -138,7 +169,13 @@ class PlaylistProvider extends ChangeNotifier {
     // complete
 
     _audioPlayer.onPlayerComplete.listen((event) {
-      playNextSong();
+      if (_isRepeatMode) { 
+        // if is repeat button is active, replay the current music
+        seek(Duration.zero);
+        play();
+      } else {
+        playNextSong();
+      }
     });
   }
 
@@ -148,6 +185,8 @@ class PlaylistProvider extends ChangeNotifier {
   List<Song> get playlist => _playlist;
   int? get currentSongIndex => _currentSongIndex;
   bool get isPlaying => _isPlaying;
+  bool get isShuffleMode => _isShuffleMode;
+  bool get isRepeatMode => _isRepeatMode;
   Duration get currentDuration => _currentDuration;
   Duration get totalDuration => _totalDuration;
 
