@@ -108,9 +108,9 @@ class SongPage extends StatelessWidget {
                           max: value.totalDuration.inSeconds.toDouble(),
                           value: value.currentDuration.inSeconds.toDouble(),
                           activeColor: Colors.green,
-                          onChanged: (double double) {},
-                          onChangeEnd: (double double) => {
-                            value.seek(Duration(seconds: double.toInt())),
+                          onChanged: (double newValue) {},
+                          onChangeEnd: (double newValue) => {
+                            value.seek(Duration(seconds: newValue.toInt())),
                           },
                         ),
                       ),
