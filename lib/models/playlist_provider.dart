@@ -3,12 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:minimal_music_player/models/song.dart';
 import 'dart:math';
 
-import 'package:on_audio_query/on_audio_query.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 class PlaylistProvider extends ChangeNotifier {
-  final OnAudioQuery _audioQuery = OnAudioQuery();
-  List<Song> _playlist = [];
+  final List<Song> _playlist = [];
 
   // final List<Song> _playlist = [
   //   // song 1

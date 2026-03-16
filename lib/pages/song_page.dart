@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:minimal_music_player/components/neu_box.dart';
 import 'package:minimal_music_player/models/playlist_provider.dart';
 import 'package:provider/provider.dart';
+import 'dart:io';
 
 class SongPage extends StatelessWidget {
   const SongPage({super.key});
@@ -52,7 +53,10 @@ class SongPage extends StatelessWidget {
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(8),
-                          child: Image.asset(currentSong.albumArtImagePath),
+                          child: Image.file(
+                            File(currentSong.albumArtImagePath),
+                            fit: BoxFit.cover,
+                          ),
                         ),
                         Padding(
                           padding: const EdgeInsets.all(15.0),
@@ -90,12 +94,15 @@ class SongPage extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(formatTime(value.currentDuration)),
-                            GestureDetector( // invisible widget in Dart that detects user interactions such as touches
+                            GestureDetector(
+                              // invisible widget in Dart that detects user interactions such as touches
                               onTap: value.toggleShuffle,
                               child: Icon(
                                 Icons.shuffle,
-                                color: value.isShuffleMode // if the corresponding variable is true then the icon turns green
-                                //else it uses the default color of the current theme
+                                color:
+                                    value
+                                        .isShuffleMode // if the corresponding variable is true then the icon turns green
+                                    //else it uses the default color of the current theme
                                     ? Colors.green
                                     : Theme.of(
                                         context,
@@ -171,7 +178,7 @@ class SongPage extends StatelessWidget {
                         ),
                       ),
                     ],
-                  ), // linha que adicionou onde apareceu o erro
+                  ),
                 ],
               ),
             ),
