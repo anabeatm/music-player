@@ -15,30 +15,73 @@ class ThemePreset {
   });
 }
 
-// TODO: modificar classe para escolha de temas personalizadas
 class ThemeProvider extends ChangeNotifier {
-  // light mode
-  ThemeData _themeData = lightMode;
+  late final List<ThemePreset> _systemPresets;
+
+  final List<ThemePreset> _customPreset = [];
+
+  late ThemePreset _currentPreset;
+  bool _isDarkMode = false;
+
+  ThemeProvider() {
+    final defaultPreset = ThemePreset(
+      name: "Monochromatic",
+      lightTheme: lightMode,
+      darkTheme: darkMode,
+    );
+
+    final bluePreset = _generatePresetFromColor("Ocean Blue", Colors.blue);
+    final greenPreset = _generatePresetFromColor("Forest Green", Colors.green);
+    final purplePreset = _generatePresetFromColor(
+      "Galaxy Purple",
+      Colors.purple,
+    );
+
+    _systemPresets = [defaultPreset, bluePreset, greenPreset, purplePreset];
+    _currentPreset = defaultPreset;
+  }
+
   // get
-  ThemeData get themeData => _themeData;
+  ThemeData get themeData =>
+      _isDarkMode ? _currentPreset.darkTheme : _currentPreset.lightTheme;
+  ThemePreset get currentPreset => _currentPreset;
+  List<ThemePreset> get allPresets => [..._systemPresets, ..._customPreset];
 
   // is dark
-  bool get isDarkMode => _themeData == darkMode;
-
-  // set
-  set themeData(ThemeData themeData) {
-    _themeData = themeData;
-
-    // update the UI
-    notifyListeners();
-  }
+  bool get isDarkMode => _isDarkMode;
 
   // toggle theme
   void toggleTheme() {
-    if (_themeData == lightMode) {
-      themeData = darkMode;
-    } else {
-      themeData = lightMode;
-    }
+    _isDarkMode = !_isDarkMode;
+    notifyListeners();
+  }
+
+  void setPreset(ThemePreset preset) {
+    _currentPreset = preset;
+    notifyListeners();
+  }
+
+  void addCustomPreset(String name, Color seedColor) {
+    final newPreset = _generatePresetFromColor(name, seedColor);
+    _customPreset.add(newPreset);
+    setPreset(newPreset);
+  }
+
+  ThemePreset _generatePresetFromColor(String name, Color color) {
+    return ThemePreset(
+      name: name,
+      lightTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: color,
+          brightness: Brightness.light,
+        ),
+      ),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: color,
+          brightness: Brightness.dark,
+        ),
+      ),
+    );
   }
 }
