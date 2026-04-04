@@ -31,6 +31,26 @@ class PlaylistProvider extends ChangeNotifier {
   int? _currentSongIndex;
   final AudioPlayer _audioPlayer = AudioPlayer();
 
+  final List<Song> _favorites = [];
+  final List<Song> _history = [];
+
+  List<Song> get favorites => _favorites;
+  List<Song> get history => _history.reversed.toList();
+
+  List<Song> get allSongs {
+    final Map<String, Song> uniqueSongs = {};
+    for (var playlist in _playlists) {
+      for (var song in playlist.songs) {
+        uniqueSongs[song.audioPath] = song;
+      }
+    }
+    return uniqueSongs.values.toList();
+  }
+
+  bool isFavorite(Song song) {
+    return _favorites.any((s) => s.audioPath == song.audioPath);
+  }
+
   Duration _currentDuration = Duration.zero;
   Duration _totalDuration = Duration.zero;
 
@@ -57,7 +77,15 @@ class PlaylistProvider extends ChangeNotifier {
 
   void play() async {
     if (_currentQueue.isEmpty || _currentSongIndex == null) return;
-    final String path = _currentQueue[_currentSongIndex!].audioPath;
+
+    final currentSong = _currentQueue[_currentSongIndex!];
+
+    if (_history.isEmpty || _history.last.audioPath != currentSong.audioPath) {
+      _history.add(currentSong);
+      if (_history.length > 50) _history.removeAt(0);
+    }
+    
+    final String path = currentSong.audioPath;
     await _audioPlayer.stop();
     await _audioPlayer.play(DeviceFileSource(path));
     _isPlaying = true;
@@ -168,6 +196,20 @@ class PlaylistProvider extends ChangeNotifier {
         playNextSong();
       }
     });
+  }
+
+  void toggleFavorite(Song song) {
+    if (isFavorite(song)) {
+      _favorites.removeWhere((s) => s.audioPath == song.audioPath);
+    } else {
+      _favorites.add(song);
+    }
+    notifyListeners();
+  }
+
+  void playQueue(List<Song> queue, int songIndex) {
+    _currentQueue = queue;
+    currentSongIndex = songIndex;
   }
 
   // dispose audio

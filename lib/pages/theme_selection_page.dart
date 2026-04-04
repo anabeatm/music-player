@@ -22,6 +22,7 @@ class ThemeSelectionPage extends StatelessWidget {
       Colors.green,
       Colors.lightGreen,
       Colors.lime,
+      Colors.limeAccent,
       Colors.yellow,
       Colors.amber,
       Colors.orange,

@@ -78,7 +78,16 @@ class SongPage extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const Icon(Icons.favorite, color: Colors.red),
+                      GestureDetector(
+                        onTap: () => value.toggleFavorite(song),
+                        child: Icon(
+                          value.isFavorite(song)
+                              ? Icons.favorite
+                              : Icons.favorite_border,
+                          color: Colors.red,
+                          size: 30,
+                        ),
+                      ),
                     ],
                   ),
                 ),

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:minimal_music_player/pages/favorite_page.dart';
+import 'package:minimal_music_player/pages/history_page.dart';
+import 'package:minimal_music_player/pages/search_page.dart';
 import 'package:minimal_music_player/pages/settings_page.dart';
 
 class MyDrawer extends StatelessWidget {
@@ -43,6 +46,50 @@ class MyDrawer extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => SettingsPage()),
+                );
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 25.0, top: 0),
+            child: ListTile(
+              title: const Text("S E A R C H"),
+              leading: const Icon(Icons.search),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SearchPage()),
+                );
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 25.0, top: 0),
+            child: ListTile(
+              title: const Text("F A V O R I T E S"),
+              leading: const Icon(Icons.favorite),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const FavoritesPage(),
+                  ),
+                );
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 25.0, top: 0),
+            child: ListTile(
+              title: const Text("H I S T O R Y"),
+              leading: const Icon(Icons.history),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HistoryPage()),
                 );
               },
             ),
