@@ -10,4 +10,18 @@ class Song {
     required this.albumArtImagePath,
     required this.audioPath,
   });
+
+  Map<String, dynamic> toJson() => {
+    'songName': songName,
+    'artistName': artistName,
+    'albumArtImagePath': albumArtImagePath,
+    'audioPath': audioPath,
+  };
+
+  factory Song.fromJson(Map<String, dynamic> json) => Song(
+    songName: json['songName'],
+    artistName: json['artistName'],
+    albumArtImagePath: json['albumArtImagePath'],
+    audioPath: json['audioPath'],
+  );
 }

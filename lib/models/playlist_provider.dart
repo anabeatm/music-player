@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:minimal_music_player/models/my_playlist.dart';
 import 'package:minimal_music_player/models/song.dart';
 import 'dart:math';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PlaylistProvider extends ChangeNotifier {
   // final List<Song> _playlist = [];
@@ -16,11 +18,13 @@ class PlaylistProvider extends ChangeNotifier {
     _playlists.add(
       MyPlaylist(name: name, playlistImagePath: imagePath, songs: []),
     );
+    saveData();
     notifyListeners();
   }
 
   void addSongToPlaylist(MyPlaylist playlist, Song newSong) {
     playlist.songs.add(newSong);
+    saveData();
     notifyListeners();
   }
 
@@ -58,6 +62,7 @@ class PlaylistProvider extends ChangeNotifier {
 
   PlaylistProvider() {
     listenToDuration();
+    loadData();
   }
 
   // initially not playing
@@ -83,8 +88,9 @@ class PlaylistProvider extends ChangeNotifier {
     if (_history.isEmpty || _history.last.audioPath != currentSong.audioPath) {
       _history.add(currentSong);
       if (_history.length > 50) _history.removeAt(0);
+      saveData();
     }
-    
+
     final String path = currentSong.audioPath;
     await _audioPlayer.stop();
     await _audioPlayer.play(DeviceFileSource(path));
@@ -204,6 +210,7 @@ class PlaylistProvider extends ChangeNotifier {
     } else {
       _favorites.add(song);
     }
+    saveData();
     notifyListeners();
   }
 
@@ -229,6 +236,49 @@ class PlaylistProvider extends ChangeNotifier {
     if (newIndex != null) {
       play();
     }
+    notifyListeners();
+  }
+
+  // load and save
+
+  Future<void> saveData() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      'playlists',
+      jsonEncode(_playlists.map((p) => p.toJson()).toList()),
+    );
+    await prefs.setString(
+      'favorites',
+      jsonEncode(_favorites.map((s) => s.toJson()).toList()),
+    );
+    await prefs.setString(
+      'history',
+      jsonEncode(_history.map((s) => s.toJson()).toList()),
+    );
+  }
+
+  Future<void> loadData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? playlistsJson = prefs.getString('playlists');
+    if (playlistsJson != null) {
+      final List decoded = jsonDecode(playlistsJson);
+      _playlists.clear();
+      _playlists.addAll(decoded.map((p) => MyPlaylist.fromJson(p)).toList());
+    }
+    final String? favoritesJson = prefs.getString('favorites');
+    if (favoritesJson != null) {
+      final List decoded = jsonDecode(favoritesJson);
+      _favorites.clear();
+      _favorites.addAll(decoded.map((s) => Song.fromJson(s)).toList());
+    }
+
+    final String? historyJson = prefs.getString('history');
+    if (historyJson != null) {
+      final List decoded = jsonDecode(historyJson);
+      _history.clear();
+      _history.addAll(decoded.map((s) => Song.fromJson(s)).toList());
+    }
+
     notifyListeners();
   }
 }
