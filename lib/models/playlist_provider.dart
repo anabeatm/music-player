@@ -1,44 +1,35 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:minimal_music_player/models/my_playlist.dart';
 import 'package:minimal_music_player/models/song.dart';
 import 'dart:math';
 
-
 class PlaylistProvider extends ChangeNotifier {
-  final List<Song> _playlist = [];
+  // final List<Song> _playlist = [];
 
-  // final List<Song> _playlist = [
-  //   // song 1
-  //   Song(
-  //     songName: "Do It",
-  //     artistName: "Stray kids",
-  //     albumArtImagePath: "assets/images/doit_album_cover.jpg",
-  //     audioPath: "audio/stray_kids_doit_audio.mp3",
-  //   ),
-  //   // song 2
-  //   Song(
-  //     songName: "No one noticed",
-  //     artistName: "The Marias",
-  //     albumArtImagePath: "assets/images/the_marias_album_cover.jpg",
-  //     audioPath: "audio/no_one_noticed_the_marias_audio.mp3",
-  //   ),
-  //   // song 3
-  //   Song(
-  //     songName: "Nana OST",
-  //     artistName: "Rose",
-  //     albumArtImagePath: "assets/images/nana_album_cover.jpg",
-  //     audioPath: "audio/nana_audio.mp3",
-  //   ),
-  // ];
+  // PLAYLISTS
 
-  // current song playing index
+  final List<MyPlaylist> _playlists = [];
+  List<MyPlaylist> get playlists => _playlists;
+
+  void createPlaylist(String name, String imagePath) {
+    _playlists.add(
+      MyPlaylist(name: name, playlistImagePath: imagePath, songs: []),
+    );
+    notifyListeners();
+  }
+
+  void addSongToPlaylist(MyPlaylist playlist, Song newSong) {
+    playlist.songs.add(newSong);
+    notifyListeners();
+  }
+
+  // QUENUE
+
+  List<Song> _currentQueue = [];
+  List<Song> get playlist => _currentQueue;
   int? _currentSongIndex;
-
-  // audioplayer
-
   final AudioPlayer _audioPlayer = AudioPlayer();
-
-  // durations
 
   Duration _currentDuration = Duration.zero;
   Duration _totalDuration = Duration.zero;
@@ -57,16 +48,16 @@ class PlaylistProvider extends ChangeNotifier {
   bool _isShuffleMode = false;
   bool _isRepeatMode = false;
 
-  // add new song
-  void addSong(Song newSong) {
-    _playlist.add(newSong);
-    notifyListeners();
+  void playFromPlaylist(MyPlaylist selectedPlaylist, int songIndex) {
+    _currentQueue = selectedPlaylist.songs;
+    currentSongIndex = songIndex;
   }
 
   // play the song
 
   void play() async {
-    final String path = _playlist[_currentSongIndex!].audioPath;
+    if (_currentQueue.isEmpty || _currentSongIndex == null) return;
+    final String path = _currentQueue[_currentSongIndex!].audioPath;
     await _audioPlayer.stop();
     await _audioPlayer.play(DeviceFileSource(path));
     _isPlaying = true;
@@ -124,18 +115,15 @@ class PlaylistProvider extends ChangeNotifier {
   // play next
 
   void playNextSong() {
-    if (_currentSongIndex != null) {
+    if (_currentSongIndex != null && _currentQueue.isNotEmpty) {
       if (_isShuffleMode) {
-        int randomIndex = Random().nextInt(_playlist.length);
-
-        // while the index is equal current song index and the playlist length is more than one
-        while (randomIndex == _currentSongIndex && _playlist.length > 1) {
-          // random index receives other value from the playlist
-          randomIndex = Random().nextInt(_playlist.length);
+        int randomIndex = Random().nextInt(_currentQueue.length);
+        while (randomIndex == _currentSongIndex && _currentQueue.length > 1) {
+          randomIndex = Random().nextInt(_currentQueue.length);
         }
         currentSongIndex = randomIndex;
       } else {
-        if (_currentSongIndex! < _playlist.length - 1) {
+        if (_currentSongIndex! < _currentQueue.length - 1) {
           currentSongIndex = _currentSongIndex! + 1;
         } else {
           currentSongIndex = 0;
@@ -147,13 +135,14 @@ class PlaylistProvider extends ChangeNotifier {
   // play previous
 
   void playPreviousSong() async {
+    if (_currentQueue.isEmpty) return;
     if (_currentDuration.inSeconds > 2) {
       seek(Duration.zero);
     } else {
       if (_currentSongIndex! > 0) {
         currentSongIndex = _currentSongIndex! - 1;
       } else {
-        currentSongIndex = _playlist.length - 1;
+        currentSongIndex = _currentQueue.length - 1;
       }
     }
   }
@@ -161,25 +150,18 @@ class PlaylistProvider extends ChangeNotifier {
   // listen to duration
 
   void listenToDuration() {
-    // total
-
     _audioPlayer.onDurationChanged.listen((newDuration) {
       _totalDuration = newDuration;
       notifyListeners();
     });
-
-    // current
 
     _audioPlayer.onPositionChanged.listen((newPosition) {
       _currentDuration = newPosition;
       notifyListeners();
     });
 
-    // complete
-
     _audioPlayer.onPlayerComplete.listen((event) {
       if (_isRepeatMode) {
-        // if is repeat button is active, replay the current music
         seek(Duration.zero);
         play();
       } else {
@@ -191,7 +173,6 @@ class PlaylistProvider extends ChangeNotifier {
   // dispose audio
 
   // getters
-  List<Song> get playlist => _playlist;
   int? get currentSongIndex => _currentSongIndex;
   bool get isPlaying => _isPlaying;
   bool get isShuffleMode => _isShuffleMode;
@@ -202,14 +183,10 @@ class PlaylistProvider extends ChangeNotifier {
   // setters
 
   set currentSongIndex(int? newIndex) {
-    // update current song index
     _currentSongIndex = newIndex;
-
     if (newIndex != null) {
       play();
     }
-
-    // update UI
     notifyListeners();
   }
 }

@@ -1,11 +1,11 @@
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:minimal_music_player/components/my_drawer.dart';
 import 'package:provider/provider.dart';
-import 'package:minimal_music_player/models/song.dart';
 import 'package:minimal_music_player/models/playlist_provider.dart';
-import 'package:minimal_music_player/pages/song_page.dart';
-import 'dart:io';
-import 'package:file_picker/file_picker.dart';
+import 'package:minimal_music_player/models/my_playlist.dart';
+import 'package:minimal_music_player/pages/playlist_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,35 +15,17 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  // get the playlist provider
   late final PlaylistProvider playlistProvider;
 
   @override
   void initState() {
     super.initState();
-
-    // get playlist provider
     playlistProvider = Provider.of<PlaylistProvider>(context, listen: false);
   }
 
-  // go to song
-  void goToSong(int songIndex) {
-    // update current song index
-    playlistProvider.currentSongIndex = songIndex;
-    // navigate to song page
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => SongPage()),
-    );
-  }
-
-  // add new song
-  // Mostrar formulário para adicionar nova música
-  void showAddSongDialog() {
+  void showCreatePlaylistDialog() {
     TextEditingController nameController = TextEditingController();
-    TextEditingController artistController = TextEditingController();
-    String? selectedAudioPath;
-    String? selectedImagePath;
+    String? selectedPlaylistImagePath;
 
     showDialog(
       context: context,
@@ -52,7 +34,7 @@ class _HomePageState extends State<HomePage> {
           builder: (context, setDialogState) {
             return AlertDialog(
               backgroundColor: Theme.of(context).colorScheme.surface,
-              title: const Text("New music"),
+              title: const Text("New Playlist"),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -60,13 +42,7 @@ class _HomePageState extends State<HomePage> {
                     TextField(
                       controller: nameController,
                       decoration: const InputDecoration(
-                        labelText: "Music name",
-                      ),
-                    ),
-                    TextField(
-                      controller: artistController,
-                      decoration: const InputDecoration(
-                        labelText: "Artist name",
+                        labelText: "Playlist Name",
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -82,78 +58,55 @@ class _HomePageState extends State<HomePage> {
                       ),
                       onPressed: () async {
                         FilePickerResult? result = await FilePicker.platform
-                            .pickFiles(type: FileType.audio);
-                        if (result != null) {
-                          setDialogState(() {
-                            selectedAudioPath = result.files.single.path;
-                          });
-                        }
-                      },
-                      icon: const Icon(Icons.audiotrack),
-                      label: Text(
-                        selectedAudioPath == null
-                            ? "Choose audio"
-                            : "Audio selected!",
-                      ),
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(
-                          context,
-                        ).colorScheme.secondary,
-                        foregroundColor: Theme.of(
-                          context,
-                        ).colorScheme.inversePrimary,
-                      ),
-                      onPressed: () async {
-                        FilePickerResult? result = await FilePicker.platform
                             .pickFiles(type: FileType.image);
                         if (result != null) {
                           setDialogState(() {
-                            selectedImagePath = result.files.single.path;
+                            selectedPlaylistImagePath =
+                                result.files.single.path;
                           });
                         }
                       },
                       icon: const Icon(Icons.image),
                       label: Text(
-                        selectedImagePath == null
-                            ? "Choose image album"
-                            : "Image selected!",
+                        selectedPlaylistImagePath == null
+                            ? "Choose Cover Image"
+                            : "Image Selected!",
                       ),
                     ),
+
+                    if (selectedPlaylistImagePath != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: Image.file(
+                          File(selectedPlaylistImagePath!),
+                          height: 50,
+                          width: 50,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
                   ],
                 ),
               ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-
                   style: TextButton.styleFrom(foregroundColor: Colors.red),
                   child: const Text("Cancel"),
                 ),
                 TextButton(
                   onPressed: () {
                     if (nameController.text.isNotEmpty &&
-                        artistController.text.isNotEmpty &&
-                        selectedAudioPath != null &&
-                        selectedImagePath != null) {
-                      Song newSong = Song(
-                        songName: nameController.text,
-                        artistName: artistController.text,
-                        albumArtImagePath: selectedImagePath!,
-                        audioPath: selectedAudioPath!,
+                        selectedPlaylistImagePath != null) {
+                      playlistProvider.createPlaylist(
+                        nameController.text,
+                        selectedPlaylistImagePath!,
                       );
-
-                      playlistProvider.addSong(newSong);
                       Navigator.pop(context);
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text(
-                            "Please fill all fields and select files.",
+                            "Please enter a name and choose an image.",
                           ),
                         ),
                       );
@@ -164,7 +117,7 @@ class _HomePageState extends State<HomePage> {
                       context,
                     ).colorScheme.inversePrimary,
                   ),
-                  child: const Text("Save"),
+                  child: const Text("Create"),
                 ),
               ],
             );
@@ -174,43 +127,58 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void goToPlaylist(MyPlaylist playlist) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => PlaylistPage(playlist: playlist)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        title: Text("L I B R A R Y"),
+        title: const Text("L I B R A R Y"),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () => showAddSongDialog(),
+            onPressed: () => showCreatePlaylistDialog(),
           ),
         ],
       ),
       drawer: const MyDrawer(),
       body: Consumer<PlaylistProvider>(
         builder: (context, value, child) {
-          // get the playlist
-          final List<Song> playlist = value.playlist;
+          final List<MyPlaylist> playlists = value.playlists;
 
-          // return list view UI
+          if (playlists.isEmpty) {
+            return const Center(child: Text("No playlists yet. Create one!"));
+          }
+
           return ListView.builder(
-            itemCount: playlist.length,
+            itemCount: playlists.length,
             itemBuilder: (context, index) {
-              // get individual song
-              final Song song = playlist[index];
+              final MyPlaylist playlist = playlists[index];
 
-              // return list tile UI
               return ListTile(
-                title: Text(song.songName),
-                subtitle: Text(song.artistName),
-                leading: Image.file(
-                  File(song.albumArtImagePath),
-                  width: 50,
-                  height: 50,
-                  fit: BoxFit.cover,
+                leading: ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: Image.file(
+                    File(playlist.playlistImagePath),
+                    width: 40,
+                    height: 40,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) =>
+                        const Icon(Icons.queue_music, size: 40),
+                  ),
                 ),
-                onTap: () => goToSong(index),
+                title: Text(
+                  playlist.name,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text("${playlist.songs.length} songs"),
+                onTap: () => goToPlaylist(playlist),
               );
             },
           );
